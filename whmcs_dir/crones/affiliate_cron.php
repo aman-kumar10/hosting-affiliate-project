@@ -1,6 +1,7 @@
 <?php
 
 use WHMCS\Database\Capsule;
+use WHMCS\Module\Addon\Affiliate\Helper;
 
 require __DIR__ . '/init.php';
 
