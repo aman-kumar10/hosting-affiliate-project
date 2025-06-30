@@ -1,0 +1,93 @@
+## EXPLAINATION: 
+
+
+==> What You Want to Set Up
+1. Special Hosting Plan for Customers
+A new customer (like Joe) signs up for hosting.
+
+He pays a one-time setup fee (example: $25).
+
+Hosting is free for the first year.
+
+After 365 days, Joe starts paying $20/month for hosting automatically.
+
+You want this to be fully automated.
+
+2. Special Affiliate Program
+Joe joins your Affiliate Program and gets his custom link.
+
+He shares this link on his website, YouTube, Instagram, etc.
+
+Someone (Nick) clicks on Joe’s link and signs up for hosting:
+
+Nick pays $25 setup fee.
+
+Hosting is free for one year.
+
+After 1 year, he pays $20/month automatically.
+
+How Joe Gets Paid as an Affiliate:
+When Nick signs up, Joe gets $10 once (one-time bonus).
+
+If Nick stays for 1 year and starts paying monthly, then:
+
+Joe gets $1 every month as long as Nick keeps paying.
+
+==> What Needs to Be Built
+ = A custom product setup:
+
+$25 setup fee
+
+Free 1st year
+
+$20/month auto-bill after 1 year
+
+ = Custom affiliate system on top of WHMCS:
+
+Tracks referrals and time
+
+Pays $10 once
+
+After 1 year, pays $1/month if the customer keeps paying
+
+ = Editable settings in Admin Panel:
+
+Change setup fee, monthly charge, payout amounts, and time periods easily.
+
+==> What This Involves Technically
+WHMCS product configuration with custom billing logic
+
+WHMCS affiliate hook customization
+
+ = A new addon module or hook to:
+
+Track signups
+
+Wait 365 days
+
+Check if customer is still active
+
+Pay monthly reward to referrer
+
+A settings page in WHMCS admin to change payout values and timeframes
+
+==> Estimated Price & Time
+Here’s a rough estimate (assuming clean WHMCS setup and no unusual complications):
+
+Feature	Estimate
+Setup fee + delayed billing setup	₹5,000 – ₹8,000
+Custom affiliate logic (one-time + recurring after 1 year)	₹10,000 – ₹15,000
+Admin settings panel (editable time & money values)	₹5,000 – ₹8,000
+Total Estimate	₹20,000 – ₹30,000
+Time Required	6 – 8 working days
+
+==> Summary
+ = You want:
+
+A hosting product: ₹25 now, ₹20/month after 1 year.
+
+A special affiliate system: ₹10 when someone signs up, ₹1/month after 1 year.
+
+Admin control to change these amounts and timing.
+
+If this is approved, more features or customizations can be added later.    

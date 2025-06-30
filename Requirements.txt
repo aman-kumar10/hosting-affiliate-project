@@ -1,0 +1,85 @@
+## Requirements
+
+I am looking for 2 things,
+ 
+1) A way to bill a customer a setup fee that covers also covers a year of hosting and then after 365 days the customer starts getting a fixed monthly rate.
+
+2) An Affiliate program that works off of the one included in WHMCS, that can handle a one time payout, but after 365 days if the new customer is still a paying customer the original      customer will get a fixed value per month as long as the new customer is paying.
+
+    Here is a more detailed breakdown on what I am trying to do.
+                                                                            
+    Look at the information below, please give me a price for this work and an estimate time frame. If this can be done at a reasonable price, I will have more work to come.
+    This is what I am looking to do is the following:
+
+    - A new customer (Joe) signs up for a base hosting package, the first year is free but there is a (example) $25.00 setup charge, after the first year that turns into a monthly charge of  say     $20.00 per month to continue the hosting service.
+
+    - The customer Joe wants to join our Affiliate program, he signs up on our members site page and a link is created for him to use on his website or on any social media platform.
+    On Joes website, a person clicks one the custom Affiliate link and (Nick) signs up for our hosting package, he will pay the same as above $25.00 setup fee and after a year the rate changes automatically to the $20.00 per month.
+
+    - Because (Nick) signed up and Joe will get $10.00 as a onetime commission.
+
+    - If Nick stays a billable customer for over a period of time (this should be a time frame that we can select) but for this example a year.
+
+    - Joe will then get $1.00 per month, which will match up with Nicks monthly hosting fee of $10.00.
+
+    - (So, after a year, basically when Nick pays his monthly bill of $10.00 Joe will get a $1.00)
+      All dollar amount and time frames must be editable from the backend.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Our Reply:
+
+A new customer (Joe) signs up for a base hosting package, the first year is free but there is a (example) $25.00 setup charge, after the first year that turns into a monthly charge of say $20.00 per month to continue the hosting service.
+ ==> You mean you will charge only for setup and after an year the monthly recurring price will be update to a fix per month price.
+ Queries:
+ Will you charge a setup one time for a year or on monthly basis for 1st year and then service price will be update to a fixed price?
+First time are you providing a coupon code to get 1 year free hosting?
+After 1 year, the recurring price per month we will get from product monthly billing cycle option and update product service to monthly. Correct? 
+Because (Nick) signed up and Joe will get $10.00 as a onetime commission.
+If Nick stays a billable customer for over a period of time (this should be a time frame that we can select) but for this example a year.
+Joe will then get $1.00 per month, which will match up with Nicks monthly hosting fee of $10.00.
+(So, after a year, basically when Nick pays his monthly bill of $10.00 Joe will get a $1.00)
+All dollar amount and time frames must be editable from the backend.
+ ==> We will add new section or options under affiliate profile in admin side by using custom hook. Where admin will set fix $ amount or % age time period. So under that affiliate if customers stay more than a year or x time frame and after that specific affiliate will get a specific %age or fixed $ commission on each month recurring payment.
+
+
+Customer Reply:
+
+1\. Will you charge a setup one time for a year or on monthly basis for 1st year and then service price will be update to a fixed price?
+Yes this is correct
+2\. First time are you providing a coupon code to get 1 year free hosting?
+Can this be done without a coupon? I would like the Affiliate Link to include that information if possible.
+3\. After 1 year, the recurring price per month we will get from product monthly billing cycle option and update product service to monthly. Correct? Yes this sounds correct
+\==> We will add new section or options under affiliate profile in admin side by using custom hook. Where admin will set fix $ amount or % age time period. So under that affiliate if customers stay more than a year or x time frame and after that specific affiliate will get a specific %age or fixed $ commission on each month recurring payment.
+Looks Good
+Will there be some type of reporting that I can get that will give me a list of Affiliates Members (Joe) and how many active members that are underneath (Joe) and the amount of days that before (Joe) will start to get the example $1.00 monthly affiliate commission?
+Also a reporting for the site that will provide me with a more compress version of the people but maybe sorted by the members that have the highest amount of active members underneath them?
+
+
+Our Reply: 
+
+Can this be done without a coupon? I would like the Affiliate Link to include that information if possible.
+ ==> Using a hook we can override the price to 0 but if there are some configurable options with packages then those price will be overriden because WHMCS does not provide any hook for configurable options. If not providing configurable options then we can override the price by custom hook.
+ Will there be some type of reporting that I can get that will give me a list of Affiliates Members (Joe) and how many active members that are underneath (Joe) and the amount of days that before (Joe) will start to get the example $1.00 monthly affiliate commission?
+ ==> In the addon module, we will create a page where admin can see the report of all affiliates and can filter data based on date range and specific affiliate user. Admin can export as CSV that report.
+ We will also give you a button to download report for highest amount of active affiliates and admin will get CSV sheet for them.
+Customer WHMCS and WP login details:
