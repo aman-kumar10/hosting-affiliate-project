@@ -1,53 +1,30 @@
 <?php
 
 use WHMCS\Database\Capsule;
+use WHMCS\Module\Addon\Affiliate\Helper;
 
 if (!defined("WHMCS")) {
     die("This file cannot be accessed directly!");
 }
 
 
-// add_hook("AffiliateClickthru", 1, function($vars) {
-//     echo "<pre>"; print_r($vars); die;
-// });
-
-// add_hook("ClientAreaPageAffiliates", 1, function($vars) { 
-//     // echo "<pre>"; print_r($vars); die; 
-// });
-
-// add_hook('AffiliateActivation', 1, function($vars) {
-//     echo "<pre>"; print_r($vars); die; 
-// });
-
-
-// function getAffiliateSettings() {
-//     $moduleSettings = Capsule::table('tbladdonmodules')->where('module', 'custom_affiliate')->get();
-//     $settings = [];
-//     foreach ($moduleSettings as $setting) {
-//         $settings[$setting->setting] = $setting->value;
-//     }
-//     return $settings;
-// }
-
-
-add_hook('AdminAreaHeadOutput', 1, function ($vars) {
-
+add_hook('AdminAreaHeaderOutput', 1, function ($vars) {
     try{
-       
-
+        $helper  = new Helper;
+        // custom form for affiliates
         if (isset($vars['filename']) && $vars['filename'] == 'affiliates') {
-             affiliateData();
+            // affiliateData();
             global $whmcs;
 
             $success = false;
             $affiliate_id = $vars['affiliateId'];
 
-            if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($whmcs->get_req_var('billing_cycle'))) {
+            if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($whmcs->get_req_var('x_days_no'))) {
                 Capsule::table('mod_affilate_data')->updateOrInsert(
                     ['affiliate_id' => $whmcs->get_req_var('Affliate_id')],
                     [
                         'affiliate_id'    => $whmcs->get_req_var('Affliate_id'),
-                        'billing_cycle'   => $whmcs->get_req_var('billing_cycle'),
+                        'x_days_no'   => $whmcs->get_req_var('x_days_no'),
                         'amount'          => $whmcs->get_req_var('amount'),
                         'affiliate_type'  => $whmcs->get_req_var('affiliate_type')
                     ]
@@ -57,18 +34,12 @@ add_hook('AdminAreaHeadOutput', 1, function ($vars) {
 
             $getAffiliateData = null;
             if (!empty($affiliate_id)) {
-                $getAffiliateData = getAffiliateData($affiliate_id); // should return object with billing_cycle, amount
+                $getAffiliateData = $helper->getAffiliateData($affiliate_id); // get affiliate data
             }
 
             $successMessage = $success ? "<div class='alert alert-success'>Affiliate commission data saved successfully.</div>" : "";
 
-            // Generate billing cycle options
-            $billingOptions = ['monthly', 'quarterly', 'semiannually', 'annually', 'biennially', 'triennially'];
-            $billingSelectHtml = "<option value=''>-- Select Billing Cycle --</option>";
-            foreach ($billingOptions as $opt) {
-                $selected = ($getAffiliateData && $getAffiliateData->billing_cycle === $opt) ? "selected" : "";
-                $billingSelectHtml .= "<option value='$opt' $selected>" . ucfirst($opt) . "</option>";
-            }
+            $x_days = $getAffiliateData ? htmlspecialchars($getAffiliateData->x_days_no) : "";
 
             // Generate affiliate type option
             $affiliateTypeOptions = ['fixed', 'percentage'];
@@ -123,15 +94,14 @@ add_hook('AdminAreaHeadOutput', 1, function ($vars) {
                 var affilateLi = $("<li><a class='tab-top' href='#tab" + dataTabId + "' role='tab' data-toggle='tab' id='tabLink" + dataTabId + "' data-tab-id='" + dataTabId + "'>Affiliate Commission</a></li>");
                 $(".nav-tabs.admin-tabs").append(affilateLi);
 
+                // create a form to setup the commision for affiliates
                 var newTabContent = $("<div class='tab-pane' id='tab" + dataTabId + "'>" +
                     `$successMessage` +
                     "<div id='errorBoxContainer'></div>" +
                     "<form id='affiliateSettingsForm' method=\\"post\\" action=\\"\\">" +
                         "<div class='form-group'>" +
-                            "<label for='billingCycle" + dataTabId + "'>Billing Cycle</label>" +
-                            "<select class='form-control' id='billingCycle" + dataTabId + "' name='billing_cycle'>" +
-                                `$billingSelectHtml` +
-                            "</select>" +
+                            "<label for='x_days_no" + dataTabId + "'>No. of X days</label>" +
+                            "<input type='text' class='form-control' id='x_days_no" + dataTabId + "' name='x_days_no' placeholder='Enter number of X days' value='$x_days' />" +
                         "</div>" +
                         "<div class='form-group'>" +
                             "<label for='affiliateType" + dataTabId + "'>Affiliate Type</label>" +
@@ -157,7 +127,7 @@ add_hook('AdminAreaHeadOutput', 1, function ($vars) {
                 });
 
                 $(document).on("submit", "#affiliateSettingsForm", function (e) {
-                    var billing = $("#billingCycle" + dataTabId).val();
+                    var billing = $("#x_days_no" + dataTabId).val();
                     var amount = $("#amount" + dataTabId).val().trim();
                     var affiliateType = $("#affiliateType" + dataTabId).val().trim();
                     var errorBox = $("#tab" + dataTabId + " #errorBoxContainer");
@@ -166,7 +136,7 @@ add_hook('AdminAreaHeadOutput', 1, function ($vars) {
                     var hasError = false;
 
                     if (billing === "") {
-                        errorBox.append("<div class='alert alert-danger'>Please select a billing cycle.</div>");
+                        errorBox.append("<div class='alert alert-danger'>Please enter X days number.</div>");
                         hasError = true;
                     }
 
@@ -205,45 +175,136 @@ add_hook('AdminAreaHeadOutput', 1, function ($vars) {
                 }, 15000);
             });
             </script>
-    HTML;
+        HTML;
 
             return $html;
         }
+
+        // custom input field for product x days
+        if(isset($vars['filename']) && $vars['filename'] == 'configproducts' && isset($_REQUEST['id']))  {
+
+            // define('GROUPS', array(1)); // define groups
+
+            $x_days = Capsule::table('mod_product_xdays')->where('pid', $_REQUEST['id'])->value('value');
+    
+            $days = $x_days ?? '';
+    
+            $html = <<<HTML
+            <style>
+                #x_days_input .fieldarea .col-sm-7 p {
+                    margin-top: 5px;
+                }
+                #x_days_input .fieldarea .col-sm-7  {
+                    padding-left: 0 !important;
+                }
+            </style>
+            <script>
+                $(document).ready(function () {
+                    
+                    var inputField = `
+                        <tr id='x_days_input'>
+                            <td class='fieldlabel'>No. of X Days</td>
+                            <td class='fieldarea'>
+                                <div class="row">
+                                    <div class='col-sm-3'><input type='number' size='40' name='x_days' value="{$days}" class='form-control input-400 input-inline' id='inputProductXdays'></div>
+                                    <div class='col-sm-7'><p>Enter the number of days for free hosting service.</p></div>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+    
+                    var \$table = $("#frmProductEdit #tab1.tab-pane.active table");
+                    if (\$table.length) {
+                        \$table.append(inputField);
+                    }
+                });
+            </script>
+            HTML;
+    
+            return $html;
+        }
+
     } catch (\Exception $e) {
         logActivity("Error in addon module 'affiliate' - AdminAreaHeadOutput function" . $e->getMessage());
     }
 });
 
+add_hook("ProductEdit", 1, function($vars) {
+    if(isset($_POST['x_days'])) {
+        Capsule::table('mod_product_xdays')->updateOrInsert(
+            ['pid' => $vars['pid'], 'gid' => $vars['gid']], 
+            ['value' => $_POST['x_days']]
+        );
+    }
+});
 
-function affiliateData()
-{
-    try{
-        if (!Capsule::Schema()->hasTable('mod_affilate_data')) {
-            Capsule::schema()->create(
-                'mod_affilate_data',
-                function ($table) {
-                    $table->increments('id');
-                    $table->string('affiliate_id');
-                    $table->string('billing_cycle');
-                    $table->string('affiliate_type');
-                    $table->string('amount');
+
+add_hook('InvoicePaid', 1, function($vars) {
+    // echo "<pre>"; print_r($vars); die;
+    try {
+        $invoiceid = $vars['invoiceid'];
+        $datePaid = $vars['invoice']->datepaid;
+
+        $userid = $vars['invoice']->userid;
+        $affiliate = Capsule::table("tblaffiliates")->where("clientid", $userid)->first();
+
+        if($affiliate && $datePaid) {
+
+            $affiliate_data = Capsule::table("mod_affilate_data")->where("affiliate_id", $affiliate->id)->first();
+
+            $paidDate = new DateTime($datePaid);
+            $now = new DateTime();
+
+            $interval = $paidDate->diff($now);
+            if ($interval->days >= $affiliate_data->x_days_no) {
+                
+                $invoiceItems = Capsule::table("tblinvoiceitems")->where("invoiceid", $invoiceid)->get();
+
+                if($affiliate_data->affiliate_type == 'fixed') {
+                    $commission = $affiliate_data->amount;
+                } else {
+                    $commission = $affiliate_data->affiliate_type/100 * $vars['invoice']->total;
                 }
-            );
+
+                foreach ($invoiceItems as $item) {
+                    if ($item->type === "Hosting" && $item->relid) {
+                        $hosting = Capsule::table("tblhosting")
+                            ->where("id", $item->relid)
+                            ->first();
+
+                        if ($hosting && $hosting->billingcycle == "Monthly") {
+                            $update_affiliate = Capsule::table("tblaffiliates")->where("id", $affiliate->id)->update([
+                                'payamount' => $commission,
+                            ]);
+                        }
+                    }
+                }
+            }
         }
-    } catch (\Exception $e) {
-        logActivity("Error in addon module 'affiliate' - affiliateData function" . $e->getMessage());
+    } catch(Exception $e) {
+        logActivity("Error in invoice paid hook" . $e->getMessage());
     }
-}
+});
 
-function getAffiliateData($affiliateId)
-{
-    try{
-        return Capsule::table('mod_affilate_data')
-            ->where('affiliate_id', $affiliateId)
-            ->first() ?? null;
-    } catch (\Exception $e) {
 
-       logActivity("Error in addon module 'affiliate' - getAffiliateData function: " . $e->getMessage());
+// function affiliateData()
+// {
+//     try{
+//         if (!Capsule::Schema()->hasTable('mod_affilate_data')) {
+//             Capsule::schema()->create(
+//                 'mod_affilate_data',
+//                 function ($table) {
+//                     $table->increments('id');
+//                     $table->string('affiliate_id');
+//                     $table->string('billing_cycle');
+//                     $table->string('affiliate_type');
+//                     $table->string('amount');
+//                 }
+//             );
+//         }
+//     } catch (\Exception $e) {
+//         logActivity("Error in addon module 'affiliate' - affiliateData function" . $e->getMessage());
+//     }
+// }
 
-    }
-}
+

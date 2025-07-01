@@ -5,9 +5,13 @@ use WHMCS\Module\Addon\Affiliate\Helper;
 
 require __DIR__ . '/init.php';
 
-$gid = 1;
+$gid = 1; // define a statatic group id
 
-affilate_program($gid); // define a statatic group id
+affilate_program($gid);
+
+$helper = new Helper;
+
+$affiliate_program = $helper->affiliate_program($gid);
 
 function affilate_program($id)
 {
@@ -27,8 +31,8 @@ function affilate_program($id)
             $currency = getCurrency($service->userid);
             $service_date = new DateTime($service->regdate);
             $today = new DateTime();
-            // $date_diff = $today->diff($service_date);
-            $date_diff = 366;
+            $date_diff = $today->diff($service_date);
+            // $date_diff = 366;
 
             /**
              * Check the service activate more than a year

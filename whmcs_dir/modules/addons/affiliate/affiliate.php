@@ -48,6 +48,33 @@ function affiliate_config() {
  */
 function affilate_activate() {
     try {
+        /* Create custom table to manage affiliate commision and data */
+        if (!Capsule::Schema()->hasTable('mod_affilate_data')) {
+            Capsule::schema()->create(
+                'mod_affilate_data',
+                function ($table) {
+                    $table->increments('id');
+                    $table->string('affiliate_id');
+                    $table->string('x_days');
+                    $table->string('affiliate_type');
+                    $table->string('amount');
+                }
+            );
+        }
+
+        /* Create custom table for product's billing X days */
+        if (!Capsule::Schema()->hasTable('mod_product_xdays')) {
+            Capsule::schema()->create(
+                'mod_product_xdays',
+                function ($table) {
+                    $table->increments('id');
+                    $table->string('gid');
+                    $table->string('pid');
+                    $table->string('value');
+                }
+            );
+        }
+
         return [
             'status' => 'success',
             'description' => 'Module activated successfully',
