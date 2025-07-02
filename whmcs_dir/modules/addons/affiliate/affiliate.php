@@ -48,7 +48,7 @@ function affiliate_config() {
  */
 function affilate_activate() {
     try {
-        /* Create custom table to manage affiliate commision and data */
+        /* Create custom table to manage affiliate commission and data */
         if (!Capsule::Schema()->hasTable('mod_affilate_data')) {
             Capsule::schema()->create(
                 'mod_affilate_data',
@@ -109,7 +109,7 @@ function affilate_deactivate() {
  * Routes admin actions through AdminDispatcher class
  */
 function affiliate_output($vars) {
-    $action = isset($_REQUEST['action']) ? $_REQUEST['action'] : 'index';
+    $action = isset($_REQUEST['action']) ? $_REQUEST['action'] : 'affiliates';
 
     $dispatcher = new AdminDispatcher();
     $dispatcher->dispatch($action, $vars);

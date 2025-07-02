@@ -50,7 +50,7 @@ class Controller
     /**
      * Client tab handler
      */
-    public function index()
+    public function affiliates()
     {
         $this->tplFileName = $this->tplVar['tab'] = __FUNCTION__;
         $this->output();
@@ -59,11 +59,11 @@ class Controller
     /**
      * Invoice tab handler
      */
-    public function settings()
-    {
-        $this->tplFileName = $this->tplVar['tab'] = __FUNCTION__;
-        $this->output();
-    }
+    // public function settings()
+    // {
+    //     $this->tplFileName = $this->tplVar['tab'] = __FUNCTION__;
+    //     $this->output();
+    // }
 
     /**
      * Loads the assigned Smarty template

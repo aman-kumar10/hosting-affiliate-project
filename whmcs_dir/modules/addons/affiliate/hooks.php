@@ -239,72 +239,51 @@ add_hook("ProductEdit", 1, function($vars) {
 });
 
 
-add_hook('InvoicePaid', 1, function($vars) {
-    // echo "<pre>"; print_r($vars); die;
+
+/* Add affiliate commision on invoice paid */
+add_hook("InvoicePaid", 1, function($vars) {
+    
     try {
+
+        $helper  = new Helper;
+
         $invoiceid = $vars['invoiceid'];
-        $datePaid = $vars['invoice']->datepaid;
+        $invoice_amount = $vars['invoice']->total;
 
-        $userid = $vars['invoice']->userid;
-        $affiliate = Capsule::table("tblaffiliates")->where("clientid", $userid)->first();
+        $invoiceItem = Capsule::table("tblinvoiceitems")->where("type", "Hosting")->where("invoiceid", $invoiceid)->get();
 
-        if($affiliate && $datePaid) {
+        foreach($invoiceItem as $item) {
+            $service = Capsule::table("tblhosting")->where("id", $item->relid)->first();
+            $affiliate = Capsule::table("tblaffiliatesaccounts")->where("relid", $service->id)->first();
 
-            $affiliate_data = Capsule::table("mod_affilate_data")->where("affiliate_id", $affiliate->id)->first();
+            if($affiliate) {
 
-            $paidDate = new DateTime($datePaid);
-            $now = new DateTime();
+                $balance = $helper->updated_affiliate_bal($affiliate->affiliateid, $service->packageid, $invoice_amount);
 
-            $interval = $paidDate->diff($now);
-            if ($interval->days >= $affiliate_data->x_days_no) {
-                
-                $invoiceItems = Capsule::table("tblinvoiceitems")->where("invoiceid", $invoiceid)->get();
+                $affiliate_data = Capsule::table("mod_affilate_data")->where("affiliate_id", $affiliate->affiliateid)->first();
 
-                if($affiliate_data->affiliate_type == 'fixed') {
-                    $commission = $affiliate_data->amount;
-                } else {
-                    $commission = $affiliate_data->affiliate_type/100 * $vars['invoice']->total;
-                }
-
-                foreach ($invoiceItems as $item) {
-                    if ($item->type === "Hosting" && $item->relid) {
-                        $hosting = Capsule::table("tblhosting")
-                            ->where("id", $item->relid)
-                            ->first();
-
-                        if ($hosting && $hosting->billingcycle == "Monthly") {
-                            $update_affiliate = Capsule::table("tblaffiliates")->where("id", $affiliate->id)->update([
-                                'payamount' => $commission,
-                            ]);
-                        }
+                if($affiliate_data) {
+                    $service_date = new DateTime($service->regdate);
+                    $nextdue = new DateTime($service->nextduedate);
+                    $date_difference = $nextdue->diff($service_date);     
+    
+                    // add amount 
+                    if($affiliate_data->affiliate_type == 'fixed') {
+                        $add_amount = $affiliate_data->amount;
+                    } else {
+                        $add_amount = $affiliate_data->amount / 100 * $invoice_amount;
+                    }
+    
+                    if($date_difference >= $affiliate_data->x_days_no) {
+                        Capsule::table("tblaffiliates")->where("id", $affiliate->affiliateid)->update([
+                            "balance" => $balance + $add_amount,
+                        ]);
                     }
                 }
             }
         }
+
     } catch(Exception $e) {
-        logActivity("Error in invoice paid hook" . $e->getMessage());
+        logActivity("Error in affiliate commision: " . $e->getMessage());
     }
 });
-
-
-// function affiliateData()
-// {
-//     try{
-//         if (!Capsule::Schema()->hasTable('mod_affilate_data')) {
-//             Capsule::schema()->create(
-//                 'mod_affilate_data',
-//                 function ($table) {
-//                     $table->increments('id');
-//                     $table->string('affiliate_id');
-//                     $table->string('billing_cycle');
-//                     $table->string('affiliate_type');
-//                     $table->string('amount');
-//                 }
-//             );
-//         }
-//     } catch (\Exception $e) {
-//         logActivity("Error in addon module 'affiliate' - affiliateData function" . $e->getMessage());
-//     }
-// }
-
-

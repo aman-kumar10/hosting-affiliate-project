@@ -206,9 +206,10 @@ form#config {
 h4#exampleModalLabel {
   margin-top: 0;
 }
- table.dataTable {
+table.dataTable {
     border-collapse: separate !important;
     border-spacing: 3px;
+    border-bottom: 1px solid #0000004d;
 }
 table.dataTable>thead>tr>th, table.dataTable>thead>tr>td {
     padding: 7px;
@@ -255,4 +256,9 @@ th.textdata.sorting {
   top: 80%;
   left: 80%;
   transform: translate(-50%, -50%);
+}
+
+#affiliateTable tr td {
+    padding: 10px !important;
+    background: #0000000a;
 }

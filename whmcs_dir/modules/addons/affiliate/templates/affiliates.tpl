@@ -7,12 +7,12 @@
     <thead>
         <tr>
             <th width="20"><input type="checkbox" id="checkallAffiliates"></th>
-            <th></th>
-            <th></th>
-            <th></th>
-            <th></th>
-            <th></th>
-            <th></th>
+            <th>{$LANG['affiliates_name']}</th>
+            <th>{$LANG['affiliates_email']}</th>
+            <th>{$LANG['affiliates_balance']}</th>
+            <th>{$LANG['affiliates_withdrawn']}</th>
+            <th>{$LANG['affiliates_date']}</th>
         </tr>
     </thead>
 </table>
+

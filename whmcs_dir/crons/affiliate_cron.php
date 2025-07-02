@@ -17,13 +17,14 @@ use WHMCS\Module\Addon\Affiliate\Helper;
 // require __DIR__ . '/init.php';
 
 
-$helper = new Helper();
+$helper = new Helper(); // 
 
 // define('GROUPS', array(1, 2, 3)); // define groups
 
+// affiliate program cron
 try {
     $helper->affiliate_program();
     
 } catch (Exception $e) {
-    logActivity("Exception in HostedAI Cron: " . $e->getMessage());
+    logActivity("Exception in affiliate program Cron: " . $e->getMessage());
 }
