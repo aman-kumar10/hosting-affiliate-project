@@ -7,7 +7,10 @@ if (!defined("WHMCS")) {
     die("This file cannot be accessed directly!");
 }
 
-
+/**
+ * Display the custom affiliate form with each active affiliate for custom affiliate commission
+ * Display a custom X days input field with each product
+ */
 add_hook('AdminAreaHeaderOutput', 1, function ($vars) {
     try{
         $helper  = new Helper;
@@ -183,8 +186,6 @@ add_hook('AdminAreaHeaderOutput', 1, function ($vars) {
         // custom input field for product x days
         if(isset($vars['filename']) && $vars['filename'] == 'configproducts' && isset($_REQUEST['id']))  {
 
-            // define('GROUPS', array(1)); // define groups
-
             $x_days = Capsule::table('mod_product_xdays')->where('pid', $_REQUEST['id'])->value('value');
     
             $days = $x_days ?? '';
@@ -229,6 +230,9 @@ add_hook('AdminAreaHeaderOutput', 1, function ($vars) {
     }
 });
 
+/**
+ * Submit X days form
+ */
 add_hook("ProductEdit", 1, function($vars) {
     if(isset($_POST['x_days'])) {
         Capsule::table('mod_product_xdays')->updateOrInsert(
@@ -240,7 +244,9 @@ add_hook("ProductEdit", 1, function($vars) {
 
 
 
-/* Add affiliate commision on invoice paid */
+/**
+ * Add or manage affiliate commission on InvoicePaid
+ */
 add_hook("InvoicePaid", 1, function($vars) {
     
     try {
@@ -258,6 +264,7 @@ add_hook("InvoicePaid", 1, function($vars) {
 
             if($affiliate) {
 
+                // get the auto updated affiliate commission
                 $balance = $helper->updated_affiliate_bal($affiliate->affiliateid, $service->packageid, $invoice_amount);
 
                 $affiliate_data = Capsule::table("mod_affilate_data")->where("affiliate_id", $affiliate->affiliateid)->first();
@@ -267,13 +274,14 @@ add_hook("InvoicePaid", 1, function($vars) {
                     $nextdue = new DateTime($service->nextduedate);
                     $date_difference = $nextdue->diff($service_date);     
     
-                    // add amount 
+                    // get the commission amount
                     if($affiliate_data->affiliate_type == 'fixed') {
                         $add_amount = $affiliate_data->amount;
                     } else {
                         $add_amount = $affiliate_data->amount / 100 * $invoice_amount;
                     }
     
+                    // add custom affiliate commision with affiliate balance
                     if($date_difference >= $affiliate_data->x_days_no) {
                         Capsule::table("tblaffiliates")->where("id", $affiliate->affiliateid)->update([
                             "balance" => $balance + $add_amount,

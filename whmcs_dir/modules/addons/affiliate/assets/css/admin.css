@@ -262,3 +262,7 @@ th.textdata.sorting {
     padding: 10px !important;
     background: #0000000a;
 }
+
+.selcted-itms {
+    padding: 15px 0px 15px;
+}

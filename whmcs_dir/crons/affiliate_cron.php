@@ -21,8 +21,14 @@ $helper = new Helper(); //
 
 // define('GROUPS', array(1, 2, 3)); // define groups
 
-// affiliate program cron
+/**
+ * Cron process for hosting services
+ */
 try {
+    /**
+     * Automates the transition of a service's billing cycle to monthly 
+     * after completing one year of free hosting, triggered via a cron process.
+     */
     $helper->affiliate_program();
     
 } catch (Exception $e) {

@@ -17,3 +17,5 @@ $_ADDONLANG['affiliates_balance'] = "Balance";
 $_ADDONLANG['affiliates_withdrawn'] = "Withdrawn";
 $_ADDONLANG['affiliates_date'] = "Date";
 
+$_ADDONLANG['export_all_csv'] = "Export All CSV";
+

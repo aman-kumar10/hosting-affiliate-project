@@ -48,7 +48,7 @@ function affiliate_config() {
  */
 function affilate_activate() {
     try {
-        /* Create custom table to manage affiliate commission and data */
+        // Create custom table to manage affiliate commission and data
         if (!Capsule::Schema()->hasTable('mod_affilate_data')) {
             Capsule::schema()->create(
                 'mod_affilate_data',
@@ -62,7 +62,7 @@ function affilate_activate() {
             );
         }
 
-        /* Create custom table for product's billing X days */
+        // Create custom table for product's billing X days 
         if (!Capsule::Schema()->hasTable('mod_product_xdays')) {
             Capsule::schema()->create(
                 'mod_product_xdays',

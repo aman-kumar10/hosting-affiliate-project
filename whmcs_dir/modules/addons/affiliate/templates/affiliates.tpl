@@ -6,7 +6,6 @@
 <table id="affiliateTable" class="display" style="width:100%">
     <thead>
         <tr>
-            <th width="20"><input type="checkbox" id="checkallAffiliates"></th>
             <th>{$LANG['affiliates_name']}</th>
             <th>{$LANG['affiliates_email']}</th>
             <th>{$LANG['affiliates_balance']}</th>
@@ -16,3 +15,6 @@
     </thead>
 </table>
 
+<div class="selcted-itms text-center">
+    <a class="btn btn-primary" id="exportAllinCSV"> <i class="fa fa-download" aria-hidden="true"></i> {$LANG['export_all_csv']}</a>
+</div>

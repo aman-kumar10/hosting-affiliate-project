@@ -52,18 +52,15 @@ class Controller
      */
     public function affiliates()
     {
+        $helper = new Helper;
+
+        if (isset($_REQUEST['form_action']) && $_REQUEST['form_action'] == 'export_affiliates') {
+            $helper->export_affiliates($_REQUEST['search']);
+            exit;
+        }
         $this->tplFileName = $this->tplVar['tab'] = __FUNCTION__;
         $this->output();
     }
-
-    /**
-     * Invoice tab handler
-     */
-    // public function settings()
-    // {
-    //     $this->tplFileName = $this->tplVar['tab'] = __FUNCTION__;
-    //     $this->output();
-    // }
 
     /**
      * Loads the assigned Smarty template
