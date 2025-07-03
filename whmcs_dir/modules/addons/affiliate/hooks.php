@@ -270,9 +270,17 @@ add_hook("InvoicePaid", 1, function($vars) {
                 $affiliate_data = Capsule::table("mod_affilate_data")->where("affiliate_id", $affiliate->affiliateid)->first();
 
                 if($affiliate_data) {
-                    $service_date = new DateTime($service->regdate);
+
+                    // // OLD CODE
+                    // $service_date = new DateTime($service->regdate);
+                    // $nextdue = new DateTime($service->nextduedate);
+                    // $date_difference = $nextdue->diff($service_date);     
+
+                    // NEW CODE
                     $nextdue = new DateTime($service->nextduedate);
-                    $date_difference = $nextdue->diff($service_date);     
+                    $today = new DateTime();
+
+                    $date_difference = $nextdue->diff($today);  
     
                     // get the commission amount
                     if($affiliate_data->affiliate_type == 'fixed') {
