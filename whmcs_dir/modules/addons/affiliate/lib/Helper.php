@@ -94,7 +94,7 @@ class Helper
     public function affiliate_program(){
 
         // Get the product data form database for connect with prodcut group
-        $services = Capsule::table('tblhosting')->get();
+        $services = Capsule::table('tblhosting')->where("billingcycle", "Annually")->get();
 
         foreach ($services as $service) {
 
@@ -110,7 +110,7 @@ class Helper
                 // $date_diff = $x_days+1; // testing
 
                 // Check the service activate more than a year
-                if ($date_diff >= $x_days) {
+                if ($date_diff->days >= $x_days) {
                     $update_service = $this->update_service($service->id, $service->packageid, $currency['id']);
                     if($update_service) {
                         logActivity("Service has been update with monthly billing cycle, service id: {$service->id}"); 
@@ -143,7 +143,7 @@ class Helper
     /**
      * Get affiliate custom data values
      */
-    function getAffiliateData($affiliateId){
+    public function getAffiliateData($affiliateId){
         try{
             return Capsule::table('mod_affilate_data')
                 ->where('affiliate_id', $affiliateId)
@@ -158,10 +158,8 @@ class Helper
     /**
      * Get affiliate auto updated balance and commission
      */
-    function updated_affiliate_bal($affId, $pid, $payamount) {
+    public function updated_affiliate_bal($affId, $pid, $payamount) {
         try {
-            $balance = Capsule::table("tblaffiliates")->where("id", $affId)->value("balance");
-            
             $product = Capsule::table("tblproducts")->where("id", $pid)->first();
 
             if($product->affiliatepaytype == 'fixed') {
@@ -175,17 +173,18 @@ class Helper
                 $addedAmount = $val / 100 * $payamount;
             }
 
+            $updateAmount = Capsule::table("tblaffiliates")->where("id", $affId)->value("balance") - $addedAmount;
+
             $removeDefault = Capsule::table("tblaffiliates")->where("id", $affId)->update([
-                "balance" => $balance - $addedAmount,
+                "balance" => $updateAmount,
             ]);
 
             if($removeDefault) {
-                $updatedBalance = Capsule::table("tblaffiliates")->where("id", $affId)->value("balance");
-                return $updatedBalance;
+                return $updateAmount;
             }
         
         } catch(Exception $e) {
-            logActivity("Error in affiliate commission cron: " . $e->getMessage());
+            logActivity("Error in affiliate commission: " . $e->getMessage());
         }
     }
 

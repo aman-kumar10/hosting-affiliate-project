@@ -24,12 +24,12 @@ add_hook('AdminAreaHeaderOutput', 1, function ($vars) {
 
             if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($whmcs->get_req_var('x_days_no'))) {
                 Capsule::table('mod_affilate_data')->updateOrInsert(
-                    ['affiliate_id' => $whmcs->get_req_var('Affliate_id')],
+                    ['affiliate_id' => $whmcs->get_req_var('Affiliate_id')],
                     [
-                        'affiliate_id'    => $whmcs->get_req_var('Affliate_id'),
-                        'x_days_no'   => $whmcs->get_req_var('x_days_no'),
-                        'amount'          => $whmcs->get_req_var('amount'),
-                        'affiliate_type'  => $whmcs->get_req_var('affiliate_type')
+                        'affiliate_id' => $whmcs->get_req_var('Affiliate_id'),
+                        'x_days_no' => $whmcs->get_req_var('x_days_no'),
+                        'amount' => $whmcs->get_req_var('amount'),
+                        'affiliate_type' => $whmcs->get_req_var('affiliate_type')
                     ]
                 );
                 $success = true;
@@ -112,7 +112,7 @@ add_hook('AdminAreaHeaderOutput', 1, function ($vars) {
                                 `$affiliateTypeSelectHtml` +
                             "</select>" +
                         "</div>" +
-                        "<input type='hidden' name='Affliate_id' value='$affiliate_id' />" +
+                        "<input type='hidden' name='Affiliate_id' value='$affiliate_id' />" +
                         "<div class='form-group'>" +
                             "<label for='amount" + dataTabId + "'>Amount</label>" +
                             "<input type='text' class='form-control' id='amount" + dataTabId + "' name='amount' placeholder='Enter amount' value='$amountValue' />" +
@@ -260,41 +260,39 @@ add_hook("InvoicePaid", 1, function($vars) {
 
         foreach($invoiceItem as $item) {
             $service = Capsule::table("tblhosting")->where("id", $item->relid)->first();
-            $affiliate = Capsule::table("tblaffiliatesaccounts")->where("relid", $service->id)->first();
 
-            if($affiliate) {
+            $affiliate_data = Capsule::table('tblaffiliatesaccounts')
+                ->join('mod_affilate_data', 'tblaffiliatesaccounts.affiliateid', '=', 'mod_affilate_data.affiliate_id')
+                ->where('tblaffiliatesaccounts.relid', $service->id)
+                ->select('tblaffiliatesaccounts.*', 'mod_affilate_data.*')
+                ->first();
 
+            if($affiliate_data) {
                 // get the auto updated affiliate commission
-                $balance = $helper->updated_affiliate_bal($affiliate->affiliateid, $service->packageid, $invoice_amount);
+                $balance = $helper->updated_affiliate_bal($affiliate_data->affiliateid, $service->packageid, $invoice_amount);
 
-                $affiliate_data = Capsule::table("mod_affilate_data")->where("affiliate_id", $affiliate->affiliateid)->first();
+                // // OLD CODE
+                // $service_date = new DateTime($service->regdate);
+                // $nextdue = new DateTime($service->nextduedate);
+                // $date_difference = $nextdue->diff($service_date);     
 
-                if($affiliate_data) {
+                // NEW CODE
+                $nextdue = new DateTime($service->nextduedate);
+                $today = new DateTime();
+                $date_difference = $nextdue->diff($today);  
 
-                    // // OLD CODE
-                    // $service_date = new DateTime($service->regdate);
-                    // $nextdue = new DateTime($service->nextduedate);
-                    // $date_difference = $nextdue->diff($service_date);     
+                // get the commission amount
+                if($affiliate_data->affiliate_type == 'fixed') {
+                    $add_amount = $affiliate_data->amount;
+                } else {
+                    $add_amount = $affiliate_data->amount / 100 * $invoice_amount;
+                }
 
-                    // NEW CODE
-                    $nextdue = new DateTime($service->nextduedate);
-                    $today = new DateTime();
-
-                    $date_difference = $nextdue->diff($today);  
-    
-                    // get the commission amount
-                    if($affiliate_data->affiliate_type == 'fixed') {
-                        $add_amount = $affiliate_data->amount;
-                    } else {
-                        $add_amount = $affiliate_data->amount / 100 * $invoice_amount;
-                    }
-    
-                    // add custom affiliate commision with affiliate balance
-                    if($date_difference >= $affiliate_data->x_days_no) {
-                        Capsule::table("tblaffiliates")->where("id", $affiliate->affiliateid)->update([
-                            "balance" => $balance + $add_amount,
-                        ]);
-                    }
+                // add custom affiliate commission with affiliate balance
+                if($date_difference->days >= $affiliate_data->x_days_no) {
+                    Capsule::table("tblaffiliates")->where("id", $affiliate_data->affiliateid)->update([
+                        "balance" => $balance + $add_amount,
+                    ]);
                 }
             }
         }
@@ -303,3 +301,40 @@ add_hook("InvoicePaid", 1, function($vars) {
         logActivity("Error in affiliate commision: " . $e->getMessage());
     }
 });
+
+
+add_hook('AfterShoppingCartCheckout', 1, function($vars) {
+    try {
+        $services = $vars['ServiceIDs'];
+
+        foreach($services as $service) {
+            $hosting = Capsule::table('tblhosting')->where("id", $service)->where("billingcycle", "Annually")->first();
+            
+            $x_days = Capsule::table("mod_product_xdays")->where("pid", $hosting->packageid)->value("value"); 
+
+            if(!empty($x_days)) {
+                $exists = Capsule::table('mod_updated_service_duedate')->where('serviceid', $service)->exists();
+
+                $date = date('Y-m-d', strtotime("+{$x_days} days"));
+
+                if (!$exists) {
+                    Capsule::table('mod_updated_service_duedate')->insert([
+                        'serviceid' => $service,
+                        'pid' => $hosting->packageid,
+                        'updated_date' => $date,
+                    ]);
+                    Capsule::table('tblhosting')->where("id", $service)->update([
+                        'nextduedate' => $date,
+                    ]);
+                }
+            }
+        }
+        
+    } catch(Exception $e) {
+        logActivity("Error in AfterShoppingCartCheckout hook. Error: ". $e->getMessage());
+    }
+});
+
+// add_hook("ClientAreaHeadOutput", 1, function($vars){
+//     echo "<pre>"; print_r(date('Y-m-d', strtotime("+10 days"))); die;
+// });

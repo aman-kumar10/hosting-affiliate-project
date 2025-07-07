@@ -75,6 +75,19 @@ function affilate_activate() {
             );
         }
 
+        // Create custom table for updated next due for service 
+        if (!Capsule::Schema()->hasTable('mod_updated_service_duedate')) {
+            Capsule::schema()->create(
+                'mod_updated_service_duedate', 
+                function ($table) {
+                    $table->increments('id');
+                    $table->string('serviceid');
+                    $table->string('pid');
+                    $table->date('updated_date');
+                }
+            );
+        }
+
         return [
             'status' => 'success',
             'description' => 'Module activated successfully',
