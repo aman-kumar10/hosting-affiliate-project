@@ -20,13 +20,6 @@ function affiliate_config() {
         'language' => 'english',
         'version' => '1.0',
         'fields' => [
-            'module_description' => [
-                'FriendlyName' => 'Description',
-                'Type' => 'textarea',
-                'Rows' => '3',
-                'Cols' => '60',
-                'Description' => 'Write about the module',
-            ],
             'delete_database' => [
                 'FriendlyName' => 'Delete Database',
                 'Type' => 'yesno',
