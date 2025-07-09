@@ -28,7 +28,6 @@ $(document).ready(function() {
         window.location.href = 'addonmodules.php?module=affiliate&form_action=export_affiliates&search='+searchVal;
     });
 
-
 });    
 
 

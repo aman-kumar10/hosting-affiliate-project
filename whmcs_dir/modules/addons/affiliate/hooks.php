@@ -8,20 +8,21 @@ if (!defined("WHMCS")) {
 }
 
 /**
- * Display the custom affiliate form with each active affiliate for custom affiliate commission
- * Display a custom X days input field with each product
+ * Display a custom tab with a custom form to submit affiliates X days and values
+ * Display a custom input field with each product to submit product billing X days
  */
 add_hook('AdminAreaHeaderOutput', 1, function ($vars) {
     try{
         $helper  = new Helper;
-        // custom form for affiliates
+
+        // Execute only when on the Affiliate page 
         if (isset($vars['filename']) && $vars['filename'] == 'affiliates') {
-            // affiliateData();
             global $whmcs;
 
             $success = false;
             $affiliate_id = $vars['affiliateId'];
 
+            // Handle custom affiliate resquest data
             if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($whmcs->get_req_var('x_days_no'))) {
                 Capsule::table('mod_affilate_data')->updateOrInsert(
                     ['affiliate_id' => $whmcs->get_req_var('Affiliate_id')],
@@ -94,10 +95,10 @@ add_hook('AdminAreaHeaderOutput', 1, function ($vars) {
                 var tabCount = $(".nav-tabs.admin-tabs > li").not(".dropdown").length;
                 var dataTabId = tabCount + 1;
 
-                var affilateLi = $("<li><a class='tab-top' href='#tab" + dataTabId + "' role='tab' data-toggle='tab' id='tabLink" + dataTabId + "' data-tab-id='" + dataTabId + "'>Affiliate Commission</a></li>");
+                var affilateLi = $("<li><a class='tab-top' href='#tab" + dataTabId + "' role='tab' data-toggle='tab' id='tabLink" + dataTabId + "' data-tab-id='" + dataTabId + "'>Custom Affiliate Tab</a></li>");
                 $(".nav-tabs.admin-tabs").append(affilateLi);
 
-                // create a form to setup the commision for affiliates
+                // Create a form to setup the Commision for Affiliates
                 var newTabContent = $("<div class='tab-pane' id='tab" + dataTabId + "'>" +
                     `$successMessage` +
                     "<div id='errorBoxContainer'></div>" +
@@ -162,7 +163,7 @@ add_hook('AdminAreaHeaderOutput', 1, function ($vars) {
                         e.preventDefault();
                     }
 
-                    // Hide alerts after 15 seconds
+                    // Hide alert message after 15 seconds
                     setTimeout(function () {
                         $(".alert").fadeOut("slow", function () {
                             $(this).remove();
@@ -170,7 +171,7 @@ add_hook('AdminAreaHeaderOutput', 1, function ($vars) {
                     }, 15000);
                 });
 
-                // Also hide alerts if not from validation
+                // Hide validation alert messages after 15 seconds 
                 setTimeout(function () {
                     $(".alert").fadeOut("slow", function () {
                         $(this).remove();
@@ -183,7 +184,7 @@ add_hook('AdminAreaHeaderOutput', 1, function ($vars) {
             return $html;
         }
 
-        // custom input field for product x days
+        // Execute only when on the Products page
         if(isset($vars['filename']) && $vars['filename'] == 'configproducts' && isset($_REQUEST['id']))  {
 
             $x_days = Capsule::table('mod_product_xdays')->where('pid', $_REQUEST['id'])->value('value');
@@ -202,6 +203,7 @@ add_hook('AdminAreaHeaderOutput', 1, function ($vars) {
             <script>
                 $(document).ready(function () {
                     
+                    // Custom input field for products X days
                     var inputField = `
                         <tr id='x_days_input'>
                             <td class='fieldlabel'>No. of X Days</td>
@@ -230,10 +232,12 @@ add_hook('AdminAreaHeaderOutput', 1, function ($vars) {
     }
 });
 
+
 /**
- * Submit X days form
+ * Handle product's
  */
 add_hook("ProductEdit", 1, function($vars) {
+    // handle the form request to insert product X days
     if(isset($_POST['x_days'])) {
         Capsule::table('mod_product_xdays')->updateOrInsert(
             ['pid' => $vars['pid'], 'gid' => $vars['gid']], 
@@ -243,98 +247,67 @@ add_hook("ProductEdit", 1, function($vars) {
 });
 
 
-
 /**
  * Add or manage affiliate commission on InvoicePaid
  */
 add_hook("InvoicePaid", 1, function($vars) {
-    
     try {
-
         $helper  = new Helper;
 
-        $invoiceid = $vars['invoiceid'];
-        $invoice_amount = $vars['invoice']->total;
+        $invoiceid = $vars['invoiceid']; 
+        $invoice_amount = $vars['invoice']->total; 
 
-        $invoiceItem = Capsule::table("tblinvoiceitems")->where("type", "Hosting")->where("invoiceid", $invoiceid)->get();
+        $invoiceItem = Capsule::table("tblinvoiceitems")->where("type", "Hosting")->where("invoiceid", $invoiceid)->get(); 
 
-        foreach($invoiceItem as $item) {
-            $service = Capsule::table("tblhosting")->where("id", $item->relid)->first();
+        foreach($invoiceItem as $item) { 
 
-            $affiliate_data = Capsule::table('tblaffiliatesaccounts')
+            $service = Capsule::table("tblhosting")->where("id", $item->relid)->first(); 
+            $product_Xdays = Capsule::table("mod_product_xdays")->where("pid", $service->packageid)->value("value"); 
+
+            if($product_Xdays) { 
+                $date = date('Y-m-d', strtotime("+{$product_Xdays} days", strtotime($service->regdate))); 
+                Capsule::table('tblhosting')->where("id", $service->id)->update([ 
+                    'nextduedate' => $date, 
+                ]); 
+            } 
+
+            $affiliate_data = Capsule::table('tblaffiliatesaccounts') 
                 ->join('mod_affilate_data', 'tblaffiliatesaccounts.affiliateid', '=', 'mod_affilate_data.affiliate_id')
                 ->where('tblaffiliatesaccounts.relid', $service->id)
                 ->select('tblaffiliatesaccounts.*', 'mod_affilate_data.*')
                 ->first();
 
-            if($affiliate_data) {
-                // get the auto updated affiliate commission
-                $balance = $helper->updated_affiliate_bal($affiliate_data->affiliateid, $service->packageid, $invoice_amount);
+            $affiliate_Xdays = $affiliate_data->x_days_no; 
+            $total_days = $product_Xdays + $affiliate_Xdays; 
+            // $total_days = 0; // testing
 
-                // // OLD CODE
-                // $service_date = new DateTime($service->regdate);
-                // $nextdue = new DateTime($service->nextduedate);
-                // $date_difference = $nextdue->diff($service_date);     
+            if($affiliate_data) { 
+                // Get the auto updated affiliate commission
+                $balance = $helper->updated_affiliate_bal($affiliate_data->affiliateid, $service->packageid, $invoice_amount);   
 
-                // NEW CODE
-                $nextdue = new DateTime($service->nextduedate);
-                $today = new DateTime();
-                $date_difference = $nextdue->diff($today);  
+                // Days difference
+                $service_date = new DateTime($service->regdate); 
+                $today = new DateTime(); 
+                $date_difference = $today->diff($service_date)->days; 
 
-                // get the commission amount
-                if($affiliate_data->affiliate_type == 'fixed') {
-                    $add_amount = $affiliate_data->amount;
-                } else {
-                    $add_amount = $affiliate_data->amount / 100 * $invoice_amount;
-                }
+                // Get the commission amount
+                if($affiliate_data->affiliate_type == 'fixed') { 
+                    $add_amount = $affiliate_data->amount; 
+                } else { 
+                    $add_amount = $affiliate_data->amount / 100 * $invoice_amount; 
+                } 
 
-                // add custom affiliate commission with affiliate balance
-                if($date_difference->days >= $affiliate_data->x_days_no) {
-                    Capsule::table("tblaffiliates")->where("id", $affiliate_data->affiliateid)->update([
-                        "balance" => $balance + $add_amount,
-                    ]);
-                }
-            }
-        }
-
+                // update the affiliate balance with custom commission value
+                if($date_difference >= $total_days) { 
+                    Capsule::table("tblaffiliates")->where("id", $affiliate_data->affiliateid)->update([ 
+                        "balance" => $balance + $add_amount, 
+                    ]); 
+                } 
+            } 
+        } 
+ 
     } catch(Exception $e) {
         logActivity("Error in affiliate commision: " . $e->getMessage());
     }
 });
 
-
-add_hook('AfterShoppingCartCheckout', 1, function($vars) {
-    try {
-        $services = $vars['ServiceIDs'];
-
-        foreach($services as $service) {
-            $hosting = Capsule::table('tblhosting')->where("id", $service)->where("billingcycle", "Annually")->first();
-            
-            $x_days = Capsule::table("mod_product_xdays")->where("pid", $hosting->packageid)->value("value"); 
-
-            if(!empty($x_days)) {
-                $exists = Capsule::table('mod_updated_service_duedate')->where('serviceid', $service)->exists();
-
-                $date = date('Y-m-d', strtotime("+{$x_days} days"));
-
-                if (!$exists) {
-                    Capsule::table('mod_updated_service_duedate')->insert([
-                        'serviceid' => $service,
-                        'pid' => $hosting->packageid,
-                        'updated_date' => $date,
-                    ]);
-                    Capsule::table('tblhosting')->where("id", $service)->update([
-                        'nextduedate' => $date,
-                    ]);
-                }
-            }
-        }
-        
-    } catch(Exception $e) {
-        logActivity("Error in AfterShoppingCartCheckout hook. Error: ". $e->getMessage());
-    }
-});
-
-// add_hook("ClientAreaHeadOutput", 1, function($vars){
-//     echo "<pre>"; print_r(date('Y-m-d', strtotime("+10 days"))); die;
-// });

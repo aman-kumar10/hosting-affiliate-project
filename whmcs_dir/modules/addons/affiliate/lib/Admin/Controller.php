@@ -54,7 +54,10 @@ class Controller
     {
         $helper = new Helper;
 
+        // Handle the affiliates export request 
         if (isset($_REQUEST['form_action']) && $_REQUEST['form_action'] == 'export_affiliates') {
+
+            // Only download the serched items
             $helper->export_affiliates($_REQUEST['search']);
             exit;
         }
@@ -71,7 +74,6 @@ class Controller
 
         $smarty->assign('tplVar', $this->tplVar);
         $smarty->assign('LANG', $this->lang);
-
         $smarty->display($this->tplVar['tplDIR'] . $this->tplFileName . '.tpl');
     }
 }

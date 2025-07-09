@@ -20,13 +20,6 @@ function affiliate_config() {
         'language' => 'english',
         'version' => '1.0',
         'fields' => [
-            'access_hash' => [
-                'FriendlyName' => 'Access Token',
-                'Type' => 'textarea',
-                'Rows' => '3',
-                'Cols' => '60',
-                'Description' => 'Enter Access hash token here',
-            ],
             'module_description' => [
                 'FriendlyName' => 'Description',
                 'Type' => 'textarea',
@@ -55,7 +48,7 @@ function affilate_activate() {
                 function ($table) {
                     $table->increments('id');
                     $table->string('affiliate_id');
-                    $table->string('x_days');
+                    $table->string('x_days_no');
                     $table->string('affiliate_type');
                     $table->string('amount');
                 }
@@ -75,23 +68,11 @@ function affilate_activate() {
             );
         }
 
-        // Create custom table for updated next due for service 
-        if (!Capsule::Schema()->hasTable('mod_updated_service_duedate')) {
-            Capsule::schema()->create(
-                'mod_updated_service_duedate', 
-                function ($table) {
-                    $table->increments('id');
-                    $table->string('serviceid');
-                    $table->string('pid');
-                    $table->date('updated_date');
-                }
-            );
-        }
-
         return [
             'status' => 'success',
             'description' => 'Module activated successfully',
         ];
+
     } catch (\Exception $e) {
         return [
             'status' => "error",
@@ -105,6 +86,12 @@ function affilate_activate() {
  */
 function affilate_deactivate() {
     try {
+        // Delete the custom database if delete database is enabled in module configuration
+        $del_database = Capsule::table("tbladdonmodules")->where("module", "affiliate")->where("setting", "delete_database")->value("value");
+        if($del_database == "on") {
+            Capsule::schema()->dropIfExists('mod_affilate_data');
+            Capsule::schema()->dropIfExists('mod_product_xdays');
+        }
         return [
             'status' => 'success',
             'description' => 'Module deactivated successfully',

@@ -15,10 +15,11 @@ class Helper
 {
 
     /**
-     * Get the affiliates in data table
+     * Get the affiliates data
      */
     public function getAffiliatesDataTable($start, $length, $search = '')
     {
+        // Get affiliate clients
         $query = Capsule::table('tblaffiliates')
             ->join('tblclients', 'tblaffiliates.clientid', '=', 'tblclients.id')
             ->select(
@@ -89,7 +90,7 @@ class Helper
 
     /**
      * Retrieve the service and, after completing one year of free hosting,
-     * automatically update the billing cycle to monthly.
+     * Automatically update the billing cycle to monthly.
      */
     public function affiliate_program(){
 
@@ -106,16 +107,16 @@ class Helper
                 $currency = getCurrency($service->userid);
                 $service_date = new DateTime($service->regdate);
                 $today = new DateTime();
-                $date_diff = $today->diff($service_date);
+                $date_diff = $today->diff($service_date)->days;
                 // $date_diff = $x_days+1; // testing
 
                 // Check the service activate more than a year
-                if ($date_diff->days >= $x_days) {
+                if ($date_diff >= $x_days) {
                     $update_service = $this->update_service($service->id, $service->packageid, $currency['id']);
                     if($update_service) {
-                        logActivity("Service has been update with monthly billing cycle, service id: {$service->id}"); 
+                        logActivity("Service has been updated with monthly billing cycle, service id: {$service->id}"); 
                     } else {
-                        logActivity("Unable to update the service after 1 year of free hosting, service id: {$service->id}"); 
+                        logActivity("unable to updated the service after 1 year of free hosting, service id: {$service->id}"); 
                     }
                 }
             }
@@ -135,8 +136,6 @@ class Helper
             ->update([
                 'billingcycle' => 'Monthly',
                 'amount' => $product_monthly_price,
-                'nextinvoicedate' => date('Y-m-d'),
-                'nextduedate' => date('Y-m-d'),
             ]);
     }
 
@@ -145,6 +144,7 @@ class Helper
      */
     public function getAffiliateData($affiliateId){
         try{
+            // get the custom values of affiliate
             return Capsule::table('mod_affilate_data')
                 ->where('affiliate_id', $affiliateId)
                 ->first() ?? null;
@@ -162,6 +162,7 @@ class Helper
         try {
             $product = Capsule::table("tblproducts")->where("id", $pid)->first();
 
+            // get the commission amount if used by whmcs default or in product affiliates 
             if($product->affiliatepaytype == 'fixed') {
                 $addedAmount = $product->affiliatepayamount;
             } elseif($product->affiliatepaytype == 'percentage') {
@@ -175,13 +176,12 @@ class Helper
 
             $updateAmount = Capsule::table("tblaffiliates")->where("id", $affId)->value("balance") - $addedAmount;
 
-            $removeDefault = Capsule::table("tblaffiliates")->where("id", $affId)->update([
+            // update the affiliate balance by removing auto updated balance
+            Capsule::table("tblaffiliates")->where("id", $affId)->update([
                 "balance" => $updateAmount,
             ]);
-
-            if($removeDefault) {
-                return $updateAmount;
-            }
+        
+            return $updateAmount;
         
         } catch(Exception $e) {
             logActivity("Error in affiliate commission: " . $e->getMessage());
@@ -199,8 +199,10 @@ class Helper
         header('Expires: 0');
 
         $output = fopen('php://output', 'w');
+        // CSV file headings
         fputcsv($output, ['Client Name', 'Email', 'Balance', 'Withdrawn', 'Signup Date']);
 
+        // Get the affiliates clients
         $query = Capsule::table('tblaffiliates')
             ->join('tblclients', 'tblaffiliates.clientid', '=', 'tblclients.id')
             ->select(
@@ -241,7 +243,6 @@ class Helper
         fclose($output);
         exit;
     }
-
 
 }
 
